@@ -161,3 +161,19 @@ src/main/java/io/ason/
     ├── ComplexExample.java  — 14 complex examples
     └── BenchExample.java    — Full benchmark suite (vs Gson)
 ```
+
+## Contributors
+
+- [Athan](https://github.com/athxx)
+
+## Latest Benchmarks
+
+Measured on this machine with JDK `25.0.2` and Gson `2.12.1`.
+
+Headline numbers:
+
+- Flat 1,000-record dataset: ASON serialize `81.23ms` vs Gson `598.95ms`, deserialize `114.12ms` vs Gson `344.43ms`
+- Flat 5,000-record dataset: ASON serialize `440.81ms` vs Gson `3674.56ms`, deserialize `450.07ms` vs Gson `1906.90ms`
+- Deep 100-record company dataset: ASON serialize `203.07ms` vs Gson `1942.17ms`, deserialize `541.09ms` vs Gson `1241.64ms`
+- Throughput summary on 1,000 records: ASON serialize `1,698,041 records/s` vs Gson `203,277 records/s`, deserialize `961,157 records/s` vs Gson `456,371 records/s`
+- Size summary for 1,000 flat records: Gson `121,675 B`, ASON text `56,718 B` (`53%` smaller), ASON binary `74,454 B` (`39%` smaller)

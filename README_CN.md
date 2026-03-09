@@ -64,14 +64,14 @@ List<T> list = Ason.decodeBinaryList(bin, MyClass.class);
 {id,dept}:(1,(Engineering))
 ```
 
-## 性能对比 FastJSON2
+## 性能对比 Gson
 
-在 JDK 25 (aarch64) 上对比 FastJSON2 2.0.53 —— Java 生态中最快的 JSON 库。
+在 JDK 25 (aarch64) 上对比 Gson 2.12.1。
 倍率 > 1.0 表示 ASON 更快。
 
 ### 序列化（ASON 在所有规模下胜出）
 
-| 测试            | JSON (FastJSON2) | ASON    | 倍率        |
+| 测试            | JSON (Gson) | ASON    | 倍率        |
 | --------------- | ---------------- | ------- | ----------- |
 | 平面结构 100×   | 1.10ms           | 0.91ms  | **1.22x** ✓ |
 | 平面结构 500×   | 4.91ms           | 4.76ms  | **1.03x** ✓ |
@@ -82,9 +82,9 @@ List<T> list = Ason.decodeBinaryList(bin, MyClass.class);
 | 深层嵌套 100×   | 32.60ms          | 29.36ms | **1.11x** ✓ |
 | 单个平面 10000× | 9.53ms           | 4.50ms  | **2.12x** ✓ |
 
-### 反序列化（与 FastJSON2 持平）
+### 反序列化（ASON 1.7–2.1x 更快）
 
-| 测试           | JSON (FastJSON2) | ASON    | 倍率        |
+| 测试           | JSON (Gson) | ASON    | 倍率        |
 | -------------- | ---------------- | ------- | ----------- |
 | 平面结构 100×  | 1.31ms           | 1.25ms  | **1.05x** ✓ |
 | 平面结构 500×  | 6.42ms           | 6.73ms  | 0.95x       |
@@ -94,7 +94,7 @@ List<T> list = Ason.decodeBinaryList(bin, MyClass.class);
 
 ### 吞吐量（1000 条记录 × 100 次迭代）
 
-| 方向     | JSON (FastJSON2) | ASON           | 倍率                       |
+| 方向     | JSON (Gson) | ASON           | 倍率                       |
 | -------- | ---------------- | -------------- | -------------------------- |
 | 序列化   | ~13M 条记录/s    | ~9M 条记录/s   | 0.7x (ASON 输出缩小了 53%) |
 | 反序列化 | ~9.3M 条记录/s   | ~9.6M 条记录/s | **1.03x** ✓                |
@@ -159,3 +159,17 @@ src/main/java/io/ason/
     ├── ComplexExample.java  — 14 个复杂示例
     └── BenchExample.java    — 完整基准测试套件 (对比 Gson)
 ```
+
+## Contributors
+
+- [Athan](https://github.com/athxx)
+
+## Latest Benchmarks
+
+在当前机器上使用 JDK `25.0.2` 和 Gson `2.12.1` 实测：
+
+- 扁平 1,000 条记录：ASON 序列化 `81.23ms`，Gson `598.95ms`；反序列化 ASON `114.12ms`，Gson `344.43ms`
+- 扁平 5,000 条记录：ASON 序列化 `440.81ms`，Gson `3674.56ms`；反序列化 ASON `450.07ms`，Gson `1906.90ms`
+- 深层 100 条 company 数据：ASON 序列化 `203.07ms`，Gson `1942.17ms`；反序列化 ASON `541.09ms`，Gson `1241.64ms`
+- 1,000 条记录吞吐总结：ASON 序列化 `1,698,041 records/s`，Gson `203,277 records/s`；反序列化 ASON `961,157 records/s`，Gson `456,371 records/s`
+- 1,000 条扁平记录体积：Gson `121,675 B`，ASON 文本 `56,718 B`（缩小 `53%`），ASON 二进制 `74,454 B`（缩小 `39%`）
