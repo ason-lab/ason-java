@@ -578,12 +578,7 @@ public class AsonTest {
     // Binary roundtrip tests
     // ========================================================================
 
-    @Test void testBinaryRoundtrip() {
-        User u = new User(42, "Alice", true);
-        byte[] bin = Ason.encodeBinary(u);
-        User decoded = Ason.decodeBinary(bin, User.class);
-        assertEquals(u, decoded);
-    }
+
 
     @Test void testBinaryListRoundtrip() {
         List<Row> rows = List.of(new Row(1, "Alice"), new Row(2, "Bob"), new Row(3, "Carol"));

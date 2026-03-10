@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'org.jetbrains.kotlin.jvm' version '1.9.22'
 }
 
 group = 'io.ason'
@@ -8,10 +9,10 @@ version = '1.0.0'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(21)
     }
-    sourceCompatibility = JavaVersion.toVersion(25)
-    targetCompatibility = JavaVersion.toVersion(25)
+    sourceCompatibility = JavaVersion.toVersion(21)
+    targetCompatibility = JavaVersion.toVersion(21)
 }
 
 repositories {
@@ -19,9 +20,12 @@ repositories {
 }
 
 dependencies {
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.12.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'com.google.code.gson:gson:2.12.1'
+    // Kotlin helpers are bundled in the main artifact for a simpler distribution model.
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 }
 
 tasks.withType(JavaCompile).configureEach {

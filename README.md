@@ -1,6 +1,6 @@
 # ASON Java — High-Performance Array-Schema Object Notation
 
-A zero-copy, SIMD-accelerated ASON serialization library for Java 25+.
+A zero-copy, SIMD-accelerated ASON serialization library for Java 21+.
 Benchmarked against **Gson** (Google), the most widely-used JSON library in the JVM ecosystem.
 
 ## Features
@@ -36,6 +36,38 @@ List<T> list = Ason.decodeList(bytes, MyClass.class);
 byte[] bin = Ason.encodeBinary(obj);
 T obj = Ason.decodeBinary(bin, MyClass.class);
 List<T> list = Ason.decodeBinaryList(bin, MyClass.class);
+```
+
+## Kotlin Support
+
+Bundled Kotlin extensions provide inline reified helpers for idiomatic Kotlin usage:
+
+```kotlin
+import io.ason.decode
+import io.ason.decodeList
+
+val user: User = decode(text)
+val users: List<User> = decodeList(text)
+```
+
+Packaging note:
+
+- The main `ason-java` artifact includes the Kotlin helper layer.
+- Because of that, the published runtime dependency set includes `kotlin-stdlib-jdk8`.
+- Java users can ignore the Kotlin APIs; they do not change the Java-facing API surface.
+
+**Note on Kotlin Data Classes**: ASON currently targets zero-dependency maximum performance using raw reflection. To use Kotlin `data class`, please ensure:
+1. Use `var` for properties instead of `val`.
+2. Provide default values for all properties (this forces Kotlin to generate the required no-arg constructor behind the scenes).
+3. Plain nullable types (e.g., `String?`) are completely natively supported and do not require `Optional<T>`.
+
+Example compatible data class:
+```kotlin
+data class User(
+    var id: Long = 0,
+    var name: String? = null,
+    var active: Boolean = false
+)
 ```
 
 ## ASON Format
@@ -138,7 +170,7 @@ Gson uses Java reflection for field access and tree-based intermediate represent
 ## Build & Run
 
 ```bash
-# Requirements: JDK 25+, Gradle 9+
+# Requirements: JDK 21+, Gradle 8.7+ (wrapper included)
 ./gradlew test
 ./gradlew runBasicExample
 ./gradlew runComplexExample

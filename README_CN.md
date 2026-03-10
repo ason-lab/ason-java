@@ -1,6 +1,6 @@
 # ASON Java — 高性能数组模式对象表示法 (High-Performance Array-Schema Object Notation)
 
-零拷贝、SIMD 加速的 ASON 序列化库，适用于 Java 25+。
+零拷贝、SIMD 加速的 ASON 序列化库，适用于 Java 21+。
 基准测试对比对象为 **Gson** (Google)，它是 JVM 生态中使用最广泛的 JSON 库。
 
 ## 特性
@@ -36,6 +36,38 @@ List<T> list = Ason.decodeList(bytes, MyClass.class);
 byte[] bin = Ason.encodeBinary(obj);
 T obj = Ason.decodeBinary(bin, MyClass.class);
 List<T> list = Ason.decodeBinaryList(bin, MyClass.class);
+```
+
+## Kotlin 支持
+
+主包内直接包含 Kotlin 扩展层与 `inline reified` 内联泛型支持，以便在 Kotlin 中优雅调用：
+
+```kotlin
+import io.ason.decode
+import io.ason.decodeList
+
+val user: User = decode(text)
+val users: List<User> = decodeList(text)
+```
+
+打包说明：
+
+- 主 `ason-java` 包内直接包含 Kotlin 辅助 API。
+- 因此发布后的运行时依赖会包含 `kotlin-stdlib-jdk8`。
+- 对 Java 用户来说，这不会改变原有 Java API 的使用方式，只是多了可选的 Kotlin 入口。
+
+**关于 Kotlin 数据类的说明**：目前 ASON 追求极致极致性能，依赖基于零依赖的底层反射实现。如果你想使用 Kotlin 的 `data class`，请务必确保：
+1. 属性需要声明为 `var` 可变类型，而非 `val`。
+2. 为所有属性提供默认值（这样 Kotlin 编译器才会为你自动生成底层所需无参构造函数）。
+3. 完美内置支持 Kotlin 级别的空安全装箱解箱，比如你可直接申明 `String?`，不需要再像 Java 般强制包裹 `Optional<T>`。
+
+配套要求示例：
+```kotlin
+data class User(
+    var id: Long = 0,
+    var name: String? = null,
+    var active: Boolean = false
+)
 ```
 
 ## ASON 格式
@@ -136,7 +168,7 @@ Gson 使用 Java 反射进行字段访问并构建基于树的中间表示。ASO
 ## 构建与运行
 
 ```bash
-# 要求：JDK 25+，Gradle 9+
+# 要求：JDK 21+，Gradle 8.7+（已包含 wrapper）
 ./gradlew test
 ./gradlew runBasicExample
 ./gradlew runComplexExample
