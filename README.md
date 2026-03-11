@@ -164,7 +164,7 @@ Gson uses Java reflection for field access and tree-based intermediate represent
 | `char`                         | single char string  | 2 bytes LE           |
 | `Optional<T>`                  | value or empty      | u8 tag + payload     |
 | `List<T>`                      | `[v1,v2,...]`       | u32 count + elements |
-| `Map<K,V>`                     | `[(k1,v1),(k2,v2)]` | u32 count + pairs    |
+| `Map<K,V>`                     | `<k1:v1, k2:v2>`    | u32 count + pairs    |
 | Nested struct                  | `(f1,f2,...)`       | fields in order      |
 
 ## Build & Run
