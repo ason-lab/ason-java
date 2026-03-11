@@ -29,6 +29,73 @@ public class AsonCrossCompatTest {
         public MiniUser() {}
     }
 
+    public static class MatrixPerson {
+        public long id;
+        public String name;
+        public MatrixPerson() {}
+    }
+
+    public static class MatrixPersonWithActive {
+        public long id;
+        public String name;
+        public boolean active;
+        public MatrixPersonWithActive() {}
+    }
+
+    public static class MatrixInnerThin {
+        public long x;
+        public long y;
+        public MatrixInnerThin() {}
+    }
+
+    public static class MatrixOuterThin {
+        public String name;
+        public MatrixInnerThin inner;
+        public MatrixOuterThin() {}
+    }
+
+    public static class MatrixTaskThin {
+        public String title;
+        public boolean done;
+        public MatrixTaskThin() {}
+    }
+
+    public static class MatrixProjectThin {
+        public String name;
+        public List<MatrixTaskThin> tasks;
+        public MatrixProjectThin() { tasks = new ArrayList<>(); }
+    }
+
+    public static class MatrixDstFewerOptionals {
+        public long id;
+        public Optional<String> label;
+        public MatrixDstFewerOptionals() { label = Optional.empty(); }
+    }
+
+    public static class MatrixPersonScore {
+        public long id;
+        public double score;
+        public MatrixPersonScore() {}
+    }
+
+    public static class MatrixNoOverlap {
+        public long foo;
+        public String bar;
+        public MatrixNoOverlap() {}
+    }
+
+    public static class MatrixNestedOptionalThin {
+        public String name;
+        public Optional<String> nick;
+        public MatrixNestedOptionalThin() { nick = Optional.empty(); }
+    }
+
+    public static class MatrixUserWithNestedOptional {
+        public long id;
+        public MatrixNestedOptionalThin profile;
+        public MatrixUserWithNestedOptional() {}
+    }
+
     // Dimension 2: Complex trailing fields
     public static class RichProfile {
         public long id;
@@ -603,6 +670,230 @@ public class AsonCrossCompatTest {
         MiniUser dst = Ason.decode(data, MiniUser.class);
         assertEquals(99, dst.id);
         assertEquals("Zara", dst.name);
+    }
+
+    @Test void testMatrixA2TypedSingleExtraFieldDropped() {
+        String input = "{id:int,name:str,active:bool}:(42,Alice,true)";
+        MatrixPerson dst = Ason.decode(input, MatrixPerson.class);
+        assertEquals(42, dst.id);
+        assertEquals("Alice", dst.name);
+    }
+
+    @Test void testMatrixA1TypedSingleExactMatch() {
+        String input = "{id:int,name:str}:(42,Alice)";
+        MatrixPerson dst = Ason.decode(input, MatrixPerson.class);
+        assertEquals(42, dst.id);
+        assertEquals("Alice", dst.name);
+    }
+
+    @Test void testMatrixA1UntypedSingleExactMatch() {
+        String input = "{id,name}:(42,Alice)";
+        MatrixPerson dst = Ason.decode(input, MatrixPerson.class);
+        assertEquals(42, dst.id);
+        assertEquals("Alice", dst.name);
+    }
+
+    @Test void testMatrixA2UntypedSingleExtraFieldDropped() {
+        String input = "{id,name,active}:(42,Alice,true)";
+        MatrixPerson dst = Ason.decode(input, MatrixPerson.class);
+        assertEquals(42, dst.id);
+        assertEquals("Alice", dst.name);
+    }
+
+    @Test void testMatrixA3TypedSingleTargetExtraFieldDefaulted() {
+        String input = "{id:int,name:str}:(42,Alice)";
+        MatrixPersonWithActive dst = Ason.decode(input, MatrixPersonWithActive.class);
+        assertEquals(42, dst.id);
+        assertEquals("Alice", dst.name);
+        assertFalse(dst.active);
+    }
+
+    @Test void testMatrixA3UntypedSingleTargetExtraFieldDefaulted() {
+        String input = "{id,name}:(42,Alice)";
+        MatrixPersonWithActive dst = Ason.decode(input, MatrixPersonWithActive.class);
+        assertEquals(42, dst.id);
+        assertEquals("Alice", dst.name);
+        assertFalse(dst.active);
+    }
+
+    @Test void testMatrixA4TypedSingleFieldReorder() {
+        String input = "{active:bool,id:int,name:str}:(true,42,Alice)";
+        MatrixPersonWithActive dst = Ason.decode(input, MatrixPersonWithActive.class);
+        assertEquals(42, dst.id);
+        assertEquals("Alice", dst.name);
+        assertTrue(dst.active);
+    }
+
+    @Test void testMatrixA4UntypedSingleFieldReorder() {
+        String input = "{active,id,name}:(true,42,Alice)";
+        MatrixPersonWithActive dst = Ason.decode(input, MatrixPersonWithActive.class);
+        assertEquals(42, dst.id);
+        assertEquals("Alice", dst.name);
+        assertTrue(dst.active);
+    }
+
+    @Test void testMatrixA5TypedVecExtraFieldDropped() {
+        String input = "[{id:int,name:str,active:bool}]:(42,Alice,true),(7,Bob,false)";
+        List<MatrixPerson> dst = Ason.decodeList(input, MatrixPerson.class);
+        assertEquals(2, dst.size());
+        assertEquals(42, dst.get(0).id);
+        assertEquals("Alice", dst.get(0).name);
+        assertEquals(7, dst.get(1).id);
+        assertEquals("Bob", dst.get(1).name);
+    }
+
+    @Test void testMatrixA5UntypedVecExtraFieldDropped() {
+        String input = "[{id,name,active}]:(42,Alice,true),(7,Bob,false)";
+        List<MatrixPerson> dst = Ason.decodeList(input, MatrixPerson.class);
+        assertEquals(2, dst.size());
+        assertEquals(42, dst.get(0).id);
+        assertEquals("Alice", dst.get(0).name);
+        assertEquals(7, dst.get(1).id);
+        assertEquals("Bob", dst.get(1).name);
+    }
+
+    @Test void testMatrixN1TypedNestedExtraFieldsDropped() {
+        String input = "{name:str,inner:{x:int,y:int,z:float,w:bool},flag:bool}:(test,(10,20,3.14,true),true)";
+        MatrixOuterThin dst = Ason.decode(input, MatrixOuterThin.class);
+        assertEquals("test", dst.name);
+        assertEquals(10, dst.inner.x);
+        assertEquals(20, dst.inner.y);
+    }
+
+    @Test void testMatrixN1UntypedNestedExtraFieldsDropped() {
+        String input = "{name,inner:{x,y,z,w},flag}:(test,(10,20,3.14,true),true)";
+        MatrixOuterThin dst = Ason.decode(input, MatrixOuterThin.class);
+        assertEquals("test", dst.name);
+        assertEquals(10, dst.inner.x);
+        assertEquals(20, dst.inner.y);
+    }
+
+    @Test void testMatrixN2TypedNestedVecExtraFieldsDropped() {
+        String input = "[{name:str,tasks:[{title:str,done:bool,priority:int,weight:float}]}]:(Alpha,[(Design,true,1,0.5),(Code,false,2,0.8)]),(Beta,[(Test,false,3,1.0)])";
+        List<MatrixProjectThin> dst = Ason.decodeList(input, MatrixProjectThin.class);
+        assertEquals(2, dst.size());
+        assertEquals("Alpha", dst.get(0).name);
+        assertEquals(2, dst.get(0).tasks.size());
+        assertEquals("Design", dst.get(0).tasks.get(0).title);
+        assertTrue(dst.get(0).tasks.get(0).done);
+        assertEquals("Beta", dst.get(1).name);
+        assertEquals(1, dst.get(1).tasks.size());
+    }
+
+    @Test void testMatrixN2UntypedNestedVecExtraFieldsDropped() {
+        String input = "[{name,tasks:[{title,done,priority,weight}]}]:(Alpha,[(Design,true,1,0.5),(Code,false,2,0.8)]),(Beta,[(Test,false,3,1.0)])";
+        List<MatrixProjectThin> dst = Ason.decodeList(input, MatrixProjectThin.class);
+        assertEquals(2, dst.size());
+        assertEquals("Code", dst.get(0).tasks.get(1).title);
+        assertFalse(dst.get(0).tasks.get(1).done);
+    }
+
+    @Test void testMatrixO1TypedOptionalSkipTrailing() {
+        String input = "[{id:int,label:str?,score:float?,flag:bool}]:(1,hello,95.5,true),(2,,,false)";
+        List<MatrixDstFewerOptionals> dst = Ason.decodeList(input, MatrixDstFewerOptionals.class);
+        assertEquals(2, dst.size());
+        assertEquals(1, dst.get(0).id);
+        assertEquals(Optional.of("hello"), dst.get(0).label);
+        assertEquals(2, dst.get(1).id);
+        assertEquals(Optional.empty(), dst.get(1).label);
+    }
+
+    @Test void testMatrixA6TypedVecTargetExtraFieldDefaulted() {
+        String input = "[{id:int,name:str}]:(42,Alice),(7,Bob)";
+        List<MatrixPersonWithActive> dst = Ason.decodeList(input, MatrixPersonWithActive.class);
+        assertEquals(2, dst.size());
+        assertEquals(42, dst.get(0).id);
+        assertEquals("Alice", dst.get(0).name);
+        assertFalse(dst.get(0).active);
+        assertEquals(7, dst.get(1).id);
+        assertEquals("Bob", dst.get(1).name);
+        assertFalse(dst.get(1).active);
+    }
+
+    @Test void testMatrixA6UntypedVecTargetExtraFieldDefaulted() {
+        String input = "[{id,name}]:(42,Alice),(7,Bob)";
+        List<MatrixPersonWithActive> dst = Ason.decodeList(input, MatrixPersonWithActive.class);
+        assertEquals(2, dst.size());
+        assertEquals(42, dst.get(0).id);
+        assertEquals("Alice", dst.get(0).name);
+        assertFalse(dst.get(0).active);
+        assertEquals(7, dst.get(1).id);
+        assertEquals("Bob", dst.get(1).name);
+        assertFalse(dst.get(1).active);
+    }
+
+    @Test void testMatrixN3TypedDeepNestedExtraFieldsDropped() {
+        String input = "{id:int,child:{name:str,sub:{a:int,b:str,c:bool},code:int,tags:[str]},extra:str}:(7,(leaf,(11,hello,true),99,[x,y]),tail)";
+        L1Thin dst = Ason.decode(input, L1Thin.class);
+        assertEquals(7, dst.id);
+        assertEquals("leaf", dst.child.name);
+        assertEquals(11, dst.child.sub.a);
+    }
+
+    @Test void testMatrixN3UntypedDeepNestedExtraFieldsDropped() {
+        String input = "{id,child:{name,sub:{a,b,c},code,tags},extra}:(7,(leaf,(11,hello,true),99,[x,y]),tail)";
+        L1Thin dst = Ason.decode(input, L1Thin.class);
+        assertEquals(7, dst.id);
+        assertEquals("leaf", dst.child.name);
+        assertEquals(11, dst.child.sub.a);
+    }
+
+    @Test void testMatrixO1UntypedOptionalSkipTrailing() {
+        String input = "[{id,label,score,flag}]:(1,hello,95.5,true),(2,,,false)";
+        List<MatrixDstFewerOptionals> dst = Ason.decodeList(input, MatrixDstFewerOptionals.class);
+        assertEquals(2, dst.size());
+        assertEquals(1, dst.get(0).id);
+        assertEquals(Optional.of("hello"), dst.get(0).label);
+        assertEquals(2, dst.get(1).id);
+        assertEquals(Optional.empty(), dst.get(1).label);
+    }
+
+    @Test void testMatrixP1TypedPartialOverlap() {
+        String input = "{id:int,name:str,score:float,active:bool}:(42,Alice,9.5,true)";
+        MatrixPersonScore dst = Ason.decode(input, MatrixPersonScore.class);
+        assertEquals(42, dst.id);
+        assertEquals(9.5, dst.score);
+    }
+
+    @Test void testMatrixP1UntypedPartialOverlap() {
+        String input = "{id,name,score,active}:(42,Alice,9.5,true)";
+        MatrixPersonScore dst = Ason.decode(input, MatrixPersonScore.class);
+        assertEquals(42, dst.id);
+        assertEquals(9.5, dst.score);
+    }
+
+    @Test void testMatrixP2TypedNoOverlapDefaults() {
+        String input = "{id:int,name:str}:(42,Alice)";
+        MatrixNoOverlap dst = Ason.decode(input, MatrixNoOverlap.class);
+        assertEquals(0, dst.foo);
+        assertNull(dst.bar);
+    }
+
+    @Test void testMatrixP2UntypedNoOverlapDefaults() {
+        String input = "{id,name}:(42,Alice)";
+        MatrixNoOverlap dst = Ason.decode(input, MatrixNoOverlap.class);
+        assertEquals(0, dst.foo);
+        assertNull(dst.bar);
+    }
+
+    @Test void testMatrixN4TypedNestedOptionalSubset() {
+        String input = "[{id:int,profile:{name:str,nick:str?,score:float?},active:bool}]:(1,(Alice,ally,9.5),true),(2,(Bob,,),false)";
+        List<MatrixUserWithNestedOptional> dst = Ason.decodeList(input, MatrixUserWithNestedOptional.class);
+        assertEquals(2, dst.size());
+        assertEquals(1, dst.get(0).id);
+        assertEquals("Alice", dst.get(0).profile.name);
+        assertEquals(Optional.of("ally"), dst.get(0).profile.nick);
+        assertEquals(2, dst.get(1).id);
+        assertEquals("Bob", dst.get(1).profile.name);
+        assertEquals(Optional.empty(), dst.get(1).profile.nick);
+    }
+
+    @Test void testMatrixN4UntypedNestedOptionalSubset() {
+        String input = "[{id,profile:{name,nick,score},active}]:(1,(Alice,ally,9.5),true),(2,(Bob,,),false)";
+        List<MatrixUserWithNestedOptional> dst = Ason.decodeList(input, MatrixUserWithNestedOptional.class);
+        assertEquals(2, dst.size());
+        assertEquals(Optional.of("ally"), dst.get(0).profile.nick);
+        assertEquals(Optional.empty(), dst.get(1).profile.nick);
     }
 
     // Dimension 2: Skip trailing complex types
